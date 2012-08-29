@@ -4,6 +4,8 @@
 
 plot position with lines
 
+This is how I made http://basecase.org/env/GPS-seasons
+
 VERY ugly code, will document later
 
 To do (incomplete):

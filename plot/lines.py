@@ -1,21 +1,29 @@
-#!/usr/bin/env python3.1
+#!/usr/bin/env python
+
+'''
+
+plot position with lines
+
+VERY ugly code, will document later
+
+To do (incomplete):
+
+* use proper cosines for latgrain/longrain
+* off by ones
+* tunable distance filtering
+* dict cursor
+* etc., etc., etc.
+* less hard-coding
+
+'''
 
 import Image
 from math import *
 from psycopg2 import connect
 from sys import argv
-from ImageOps import invert
 
-
-# wdn:
-#latrange = [48.5, 48.8]
-#lonrange = [-123.2, -122.75]
-
-#latrange = [45.45, 45.65]
-#lonrange = [-122.75, -122.5]
-
-latrange = [45.565, 45.571]
-lonrange = [-122.676, -122.671]
+latrange = [45.45, 45.65]
+lonrange = [-122.75, -122.5]
 
 longrain = 1/50000.0
 latgrain = longrain/1.5 #longrain/sqrt(2)

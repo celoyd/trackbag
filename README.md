@@ -5,7 +5,7 @@ Ad-hoc tools for taking NMEA GPS data off an Amod AGL 3080 and storing it in pos
 
 Requires gpsbabel (http://www.gpsbabel.org or your preferred package library) and the python lxml library.
 
-This is really ad-hoc code. It evolved from other code and does some pointless things (notably, the GPX conversion), and it won't work out of the box for you, but I hope it might be a useful starting point for setting up your own system. Improvements are, of course, welcome.
+This is really ad-hoc code. It evolved from other code and does some pointless things, and it won't work out of the box for you, but I hope it might be a useful starting point for setting up your own system. Improvements are, of course, welcome.
 
 
 Overview
@@ -28,3 +28,17 @@ I query the database with the since.sh script (again, actually a shell alias), w
 $ since '1 week' 'lon, lat' > points
 
 That's easy to plot with gnuplot, processing, or whatever you like. (I may upload some of my python plotting scripts eventually.)
+
+
+To do
+=====
+
+* Consider PostGIS.
+
+* Figure out why I didn't have gpsbabel write CSV instead of going through GPX.
+
+* Think about storing skyview.
+
+* Handle duplicate violation better.
+
+* Clean up & share plotting scripts.

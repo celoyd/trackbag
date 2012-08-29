@@ -35,6 +35,8 @@ To do
 
 * Consider PostGIS.
 
+* Consider http://code.google.com/p/pynmea/ (or homebrew) to bypass gpsbabel.
+
 * Figure out why I didn't have gpsbabel write CSV instead of going through GPX.
 
 * Think about storing skyview.

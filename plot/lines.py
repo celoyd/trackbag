@@ -1,18 +1,17 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 '''
 
 plot position with lines
 
-This is how I made http://basecase.org/env/GPS-seasons
+A slightly different version of this made http://basecase.org/env/GPS-seasons
 
 VERY ugly code, will document later
 
 To do (incomplete):
 
-* use proper cosines for latgrain/longrain
 * off by ones
-* tunable distance filtering
 * dict cursor
 * etc., etc., etc.
 * less hard-coding
@@ -27,25 +26,31 @@ from sys import argv
 latrange = [45.45, 45.65]
 lonrange = [-122.75, -122.5]
 
-longrain = 1/50000.0
-latgrain = longrain/1.5 #longrain/sqrt(2)
+'''
+We do a simple rectangular projection that's equidistant along the center
+latitude. This is basically correct in terms of distance, area, and angle
+at the scale of a city or small region. If you want something fancier, use
+a real GIS package winking emoticon.
+'''
+
+# Degrees of latitude per pixel. 1 degree is about 111 km or 69 mi.
+longrain = 1/10000.0
+
+# Derive the degrees of longitude per pixel. Assume a spherical earth.
+latgrain = longrain * cos(radians(
+	latrange[0] + (latrange[1] - latrange[0])/2.0
+))
 
 def K(h, a):
 	factor = 255 * a
-	
 	r = sin(pi*h)
 	g = sin(pi*(h + 1.0/3.0))
 	b = sin(pi*(h + 2.0/3.0))
-	
 	return tuple(int(factor*ch*ch) for ch in (r, g, b))
 
-notch = 8
-
-def increment(thing, plus):
-	return (
-		thing[0] - plus[0],
-		thing[1] - plus[1],
-		thing[2] - plus[2])
+# This bump function actually subtracts, because we start from white.
+def bump(a, b): #               ↓ there
+	return tuple(map(lambda x,y: x-y, a,b))
 
 def line(f, t, p, c): # Bresenham's, from Wikipedia
 	x0, x1 = f[0], t[0]
@@ -61,10 +66,9 @@ def line(f, t, p, c): # Bresenham's, from Wikipedia
 	if y0 < y1: sy = 1
 	else: sy = -1
 	
-	while True: #x0 != x1 and y0 != y1:
+	while True: # Looping on True and breaking? Ick. Why?
 		if x0 == x1 and y0 == y1: break
-		p[x0, y0] = increment(p[x0, y0], c)
-		#if x0 == x1 and y0 == y1: break
+		p[x0, y0] = bump(p[x0, y0], c)
 		e2 = 2*err
 		if e2 > -dy:
 			err -= dy
@@ -73,8 +77,8 @@ def line(f, t, p, c): # Bresenham's, from Wikipedia
 			err = err + dx
 			y0 = y0 + sy
 
-width = int(round((lonrange[1]-lonrange[0]) * 1/longrain)) + 2
-height = int(round((latrange[1]-latrange[0]) * 1/latgrain)) + 2
+width = int(round((lonrange[1]-lonrange[0]) * 1/longrain)) + 1
+height = int(round((latrange[1]-latrange[0]) * 1/latgrain)) + 1
 
 i = Image.new('RGB', (width, height), (255,255,255))
 p = i.load()
@@ -82,22 +86,17 @@ p = i.load()
 cx = connect(database='points', user='char', host='localhost')
 c = cx.cursor('twinkles')
 
-def scale(xy):
-	
+c.execute("select lat, lon, extract(epoch from time), pdop from points where lat > %s and lat < %s and lon > %s and lon < %s and time > now() - interval '2 months' order by time" % (latrange[0], latrange[1], lonrange[0], lonrange[1]))
 
-c.execute("select lat, lon, extract(epoch from time), pdop from points where lat > %s and lat < %s and lon > %s and lon < %s" % (latrange[0], latrange[1], lonrange[0], lonrange[1]))
-
-#  and extract(dow from time) = 4
+# and extract(dow from time) = 4
 
 t = 0
 
 lastpoint = []
 
 for point in c:
-#	if None in point:
-#		point = (point[0], point[1], point[2], 2)
-	if None in point:
-		continue
+	if None in point: continue
+	
 	y = int((point[0]-latrange[0]) * 1/latgrain)
 	x = int((point[1]-lonrange[0]) * 1/longrain)
 
@@ -110,12 +109,13 @@ for point in c:
 	#if abs(x - lastpoint[0]) > 500 or abs(y - lastpoint[1]) > 500:
 			lastpoint = point
 	except:
-		print point
+		pass
+		#print point
 	
 	color = K(((182 + point[2])/365.0), 1.0/point[3])
 	
 	try:
-		line([lastpoint['x'], [x, y], p, color)
+		line(lastpoint, [x, y], p, color)
 	except:
 		pass
 	
@@ -123,7 +123,6 @@ for point in c:
 		
 	t += 1
 
-#i = invert(i)
 i.save(argv[1])
 
-print(t)
+#print(t)
